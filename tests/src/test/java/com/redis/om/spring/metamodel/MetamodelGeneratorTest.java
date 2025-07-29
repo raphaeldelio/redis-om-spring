@@ -559,4 +559,81 @@ class MetamodelGeneratorTest {
         () -> assertThat(fileContents).contains(
             "_KEY = new MetamodelField<ValidDocumentNumericIndexed, String>(\"__key\", String.class, true);"));
   }
+
+  @Test
+  @Classpath(
+          "data.metamodel.ValidDocumentIndexedNestedWithNumericIndexed"
+  )
+  @Classpath(
+          "data.metamodel.AddressWithNumericIndexed"
+  )
+  void testValidDocumentIndexedNestedWithNumericIndexed(Results results) throws IOException {
+    List<String> warnings = getWarningStrings(results);
+    assertThat(warnings).hasSize(1).containsOnly(
+            "Processing class ValidDocumentIndexedNestedWithNumericIndexed could not resolve valid.AddressWithNumericIndexed while checking for nested @Indexed");
+
+    List<String> errors = getErrorStrings(results);
+    assertAll( //
+            () -> assertThat(errors).hasSize(1), //
+            () -> assertThat(errors).containsOnly("warnings found and -Werror specified") //
+    );
+
+    assertThat(results.generated).hasSize(1);
+    JavaFileObject metamodel = results.generated.getFirst();
+    assertThat(metamodel.getName()).isEqualTo("/SOURCE_OUTPUT/valid/ValidDocumentIndexedNestedWithNumericIndexed$.java");
+
+    var fileContents = metamodel.getCharContent(true);
+
+    assertAll(
+            // test package matches source package
+            () -> assertThat(fileContents).contains("package valid;"), //
+
+            () -> assertThat(fileContents).contains("public static Field id;"),
+            () -> assertThat(fileContents).contains("public static Field address_city;"),
+            () -> assertThat(fileContents).contains("public static Field address_street;"),
+            () -> assertThat(fileContents).contains("public static Field address_zipCode;"),
+            () -> assertThat(fileContents).contains("public static Field address_latitude;"),
+            () -> assertThat(fileContents).contains("public static Field address_longitude;"),
+
+            () -> assertThat(fileContents).contains(
+             "id = com.redis.om.spring.util.ObjectUtils.getDeclaredFieldTransitively(ValidDocumentIndexedNestedWithNumericIndexed.class, \"id\");"),
+            () -> assertThat(fileContents).contains(
+             "address_city = com.redis.om.spring.util.ObjectUtils.getDeclaredFieldTransitively(com.redis.om.spring.util.ObjectUtils.getDeclaredFieldTransitively(ValidDocumentIndexedNestedWithNumericIndexed.class, \"address\").getType(), \"city\");"),
+            () -> assertThat(fileContents).contains(
+             "address_street = com.redis.om.spring.util.ObjectUtils.getDeclaredFieldTransitively(com.redis.om.spring.util.ObjectUtils.getDeclaredFieldTransitively(ValidDocumentIndexedNestedWithNumericIndexed.class, \"address\").getType(), \"street\");"),
+            () -> assertThat(fileContents).contains(
+             "address_zipCode = com.redis.om.spring.util.ObjectUtils.getDeclaredFieldTransitively(com.redis.om.spring.util.ObjectUtils.getDeclaredFieldTransitively(ValidDocumentIndexedNestedWithNumericIndexed.class, \"address\").getType(), \"zipCode\");"),
+            () -> assertThat(fileContents).contains(
+             "address_latitude = com.redis.om.spring.util.ObjectUtils.getDeclaredFieldTransitively(com.redis.om.spring.util.ObjectUtils.getDeclaredFieldTransitively(ValidDocumentIndexedNestedWithNumericIndexed.class, \"address\").getType(), \"latitude\");"),
+            () -> assertThat(fileContents).contains(
+             "address_longitude = com.redis.om.spring.util.ObjectUtils.getDeclaredFieldTransitively(com.redis.om.spring.util.ObjectUtils.getDeclaredFieldTransitively(ValidDocumentIndexedNestedWithNumericIndexed.class, \"address\").getType(), \"longitude\");"),
+
+            () -> assertThat(fileContents).contains("public static TextTagField<ValidDocumentIndexedNestedWithNumericIndexed, String> ID;"),
+            () -> assertThat(fileContents).contains(
+             "public static TextTagField<ValidDocumentIndexedNestedWithNumericIndexed, String> ADDRESS_CITY;"),
+            () -> assertThat(fileContents).contains(
+             "public static TextField<ValidDocumentIndexedNestedWithNumericIndexed, String> ADDRESS_STREET;"),
+            () -> assertThat(fileContents).contains(
+             "public static NumericField<ValidDocumentIndexedNestedWithNumericIndexed, Integer> ADDRESS_ZIP_CODE;"),
+            () -> assertThat(fileContents).contains(
+             "public static NumericField<ValidDocumentIndexedNestedWithNumericIndexed, Double> ADDRESS_LATITUDE;"),
+            () -> assertThat(fileContents).contains(
+             "public static NumericField<ValidDocumentIndexedNestedWithNumericIndexed, Double> ADDRESS_LONGITUDE;"),
+
+            () -> assertThat(fileContents).contains(
+             "ID = new TextTagField<ValidDocumentIndexedNestedWithNumericIndexed, String>(new SearchFieldAccessor(\"id\", \"$.id\", id),true);"),
+            () -> assertThat(fileContents).contains(
+             "ADDRESS_CITY = new TextTagField<ValidDocumentIndexedNestedWithNumericIndexed, String>(new SearchFieldAccessor(\"address_city\", \"$.address.city\", address_city),true);"),
+            () -> assertThat(fileContents).contains(
+             "ADDRESS_STREET = new TextField<ValidDocumentIndexedNestedWithNumericIndexed, String>(new SearchFieldAccessor(\"address_street\", \"$.address.street\", address_street),true);"),
+            () -> assertThat(fileContents).contains(
+             "ADDRESS_ZIP_CODE = new NumericField<ValidDocumentIndexedNestedWithNumericIndexed, Integer>(new SearchFieldAccessor(\"address_zipCode\", \"$.address.zipCode\", address_zipCode),true);"),
+            () -> assertThat(fileContents).contains(
+             "ADDRESS_LATITUDE = new NumericField<ValidDocumentIndexedNestedWithNumericIndexed, Double>(new SearchFieldAccessor(\"lat\", \"$.address.latitude\", address_latitude),true);"),
+            () -> assertThat(fileContents).contains(
+             "ADDRESS_LONGITUDE = new NumericField<ValidDocumentIndexedNestedWithNumericIndexed, Double>(new SearchFieldAccessor(\"lng\", \"$.address.longitude\", address_longitude),true);"),
+            () -> assertThat(fileContents).contains(
+             "_KEY = new MetamodelField<ValidDocumentIndexedNestedWithNumericIndexed, String>(\"__key\", String.class, true);")
+    );
+  }
 }
